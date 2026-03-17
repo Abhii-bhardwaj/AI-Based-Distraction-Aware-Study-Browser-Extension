@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyGuard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --card: #181c26;
+      --border: #232736;
+      --border2: #2e3347;
+      --text: #e8eaf0;
+      --muted: #5a6080;
+      --dim: #3a4060;
+      --green: #00e5a0;
+      --green-dim: #00e5a018;
+      --green-border: #00e5a030;
+      --amber: #ffb830;
+      --amber-dim: #ffb83018;
+      --orange: #ff7c40;
+      --orange-dim: #ff7c4018;
+      --red: #ff4560;
+      --red-dim: #ff456018;
+      --red-border: #ff456030;
+      --blue: #4d9fff;
+      --blue-dim: #4d9fff14;
+      --accent: #7b6fff;
+      --accent-dim: #7b6fff18;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      overflow-x: hidden;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; flex-direction: column; min-height: 100vh; }
+    .screen.active { display: flex; }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .logo-mark {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--accent-dim);
+      border: 1px solid #7b6fff40;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-svg { width: 16px; height: 16px; fill: var(--accent); }
+    .header-text { flex: 1; }
+    .header-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .header-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .status-pill {
+      font-size: 10px; font-weight: 500;
+      padding: 3px 8px; border-radius: 20px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .status-pill.idle { background: var(--border); color: var(--muted); }
+    .status-pill.live { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+    .status-pill.blocking { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); }
+    .pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── CONSENT SCREEN ── */
+    .consent-body { flex: 1; padding: 24px 18px; display: flex; flex-direction: column; gap: 20px; }
+    .consent-hero { text-align: center; padding: 8px 0 4px; }
+    .consent-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: var(--accent-dim); border: 1px solid #7b6fff30;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .consent-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .consent-desc { font-size: 12px; color: var(--muted); line-height: 1.65; }
+
+    .permissions-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .perm-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .perm-row:last-child { border-bottom: none; }
+    .perm-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 13px;
+    }
+    .perm-icon.blue { background: var(--blue-dim); }
+    .perm-icon.green { background: var(--green-dim); }
+    .perm-icon.amber { background: var(--amber-dim); }
+    .perm-icon.accent { background: var(--accent-dim); }
+    .perm-name { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .perm-detail { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    .privacy-note {
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 11px; color: #00e5a0cc;
+      line-height: 1.55;
+    }
+
+    .consent-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+    .btn-start {
+      padding: 12px;
+      background: var(--accent);
+      border: none; border-radius: 10px;
+      color: #fff; font-family: 'Sora', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; letter-spacing: .01em;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn-start:hover { opacity: .9; }
+    .btn-start:active { transform: scale(.98); }
+    .btn-cancel {
+      padding: 9px;
+      background: transparent; border: none;
+      color: var(--muted); font-family: 'Sora', sans-serif;
+      font-size: 11px; cursor: pointer;
+      transition: color .15s;
+    }
+    .btn-cancel:hover { color: var(--text); }
+
+    /* ── LIVE SCREEN ── */
+    .live-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+
+    /* DLS card */
+    .dls-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .dls-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+    .dls-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+    .dls-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 44px; font-weight: 500; line-height: 1;
+      transition: color .4s;
+    }
+    .dls-pct { font-size: 20px; color: var(--muted); margin-left: 2px; }
+    .tier-chip {
+      font-size: 11px; font-weight: 500;
+      padding: 4px 10px; border-radius: 20px;
+      margin-bottom: 4px;
+    }
+    .tier-0 { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+    .tier-1 { background: var(--amber-dim); color: var(--amber); border: 1px solid #ffb83030; }
+    .tier-2 { background: var(--orange-dim); color: var(--orange); border: 1px solid #ff7c4030; }
+    .tier-3 { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+
+    .progress-track { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+    .progress-fill { height: 4px; border-radius: 2px; transition: width .5s, background .4s; }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-cell {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 13px;
+    }
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px; font-weight: 500; color: var(--text);
+      margin-bottom: 3px;
+    }
+    .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* Signal bars */
+    .signals-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+    }
+    .signals-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+    .signal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .signal-row:last-child { margin-bottom: 0; }
+    .signal-name { font-size: 11px; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .signal-bar-track { width: 80px; height: 3px; background: var(--border2); border-radius: 2px; flex-shrink: 0; }
+    .signal-bar-fill { height: 3px; border-radius: 2px; transition: width .5s; }
+    .signal-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; width: 30px; text-align: right; flex-shrink: 0; }
+
+    /* New signals highlight */
+    .new-badge {
+      font-size: 9px; font-weight: 600; padding: 1px 5px;
+      border-radius: 3px; background: var(--accent-dim);
+      color: var(--accent); flex-shrink: 0;
+    }
+
+    /* Alert box for tier 3 */
+    .alert-box {
+      border-radius: 10px; padding: 12px;
+      font-size: 12px; line-height: 1.6; display: none;
+    }
+    .alert-box.tier3 { background: var(--red-dim); border: 1px solid var(--red-border); color: #ff7c9a; display: block; }
+    .alert-box.tier2 { background: var(--orange-dim); border: 1px solid #ff7c4030; color: #ffaa80; display: block; }
+    .alert-box.tier1 { background: var(--amber-dim); border: 1px solid #ffb83030; color: #ffd07a; display: block; }
+
+    /* Footer actions */
+    .live-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .btn-end {
+      flex: 1; padding: 10px;
+      background: transparent; border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--muted);
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-end:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+    .btn-override {
+      flex: 1; padding: 10px;
+      background: var(--border); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text);
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-override:hover { background: var(--border2); }
+
+    /* Session summary */
+    .summary-screen .summary-body { flex: 1; padding: 24px 18px; display: flex; flex-direction: column; gap: 16px; }
+    .summary-title { font-size: 15px; font-weight: 600; text-align: center; }
+    .summary-score {
+      text-align: center; padding: 20px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .summary-score-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 56px; font-weight: 500; line-height: 1;
+    }
+    .summary-score-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .btn-new-session {
+      padding: 12px;
+      background: var(--accent); border: none; border-radius: 10px;
+      color: #fff; font-family: 'Sora', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-new-session:hover { opacity: .9; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1: CONSENT
+════════════════════════════════════════════ -->
+<div class="screen active" id="screen-consent">
+  <div class="header">
+    <div class="logo-mark">
+      <svg class="logo-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">StudyGuard</div>
+      <div class="header-sub">ML-powered focus assistant</div>
+    </div>
+    <div class="status-pill idle">
+      <span class="pulse"></span>idle
+    </div>
+  </div>
+
+  <div class="consent-body">
+    <div class="consent-hero">
+      <div class="consent-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--accent)">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" opacity=".9"/>
+        </svg>
+      </div>
+      <div class="consent-title">Start a study session?</div>
+      <div class="consent-desc">StudyGuard monitors behavioral signals to detect distraction and block distracting sites — only while you're actively studying.</div>
+    </div>
+
+    <div class="permissions-card">
+      <div class="perm-row">
+        <div class="perm-icon blue">⌨</div>
+        <div>
+          <div class="perm-name">Keystrokes &amp; scroll</div>
+          <div class="perm-detail">Timing patterns only — never content or text you type</div>
+        </div>
+      </div>
+      <div class="perm-row">
+        <div class="perm-icon accent">🖱</div>
+        <div>
+          <div class="perm-name">Mouse speed &amp; tab switches</div>
+          <div class="perm-detail">Detects frantic switching and rapid cursor movement</div>
+        </div>
+      </div>
+      <div class="perm-row">
+        <div class="perm-icon amber">🔔</div>
+        <div>
+          <div class="perm-name">Notification response time</div>
+          <div class="perm-detail">How fast you react to focus alerts — trains your personal model</div>
+        </div>
+      </div>
+      <div class="perm-row">
+        <div class="perm-icon green">🌐</div>
+        <div>
+          <div class="perm-name">Site blocking &amp; domain visits</div>
+          <div class="perm-detail">Social media auto-blocked when distraction score exceeds threshold</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="privacy-note">
+      🔒 All data stays on your device. No external servers. Nothing is uploaded anywhere.
+    </div>
+
+    <div class="consent-actions">
+      <button class="btn-start" id="btn-start">Start session</button>
+      <button class="btn-cancel" id="btn-cancel">Not now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2: LIVE SESSION
+════════════════════════════════════════════ -->
+<div class="screen" id="screen-live">
+  <div class="header">
+    <div class="logo-mark">
+      <svg class="logo-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">StudyGuard</div>
+      <div class="header-sub" id="session-timer">0 min active</div>
+    </div>
+    <div class="status-pill live" id="header-status">
+      <span class="pulse"></span><span id="status-text">live</span>
+    </div>
+  </div>
+
+  <div class="live-body">
+
+    <!-- DLS score card -->
+    <div class="dls-card">
+      <div class="dls-label">Distraction likelihood score</div>
+      <div class="dls-row">
+        <div>
+          <span class="dls-number" id="dls-number">0</span><span class="dls-pct">%</span>
+        </div>
+        <div class="tier-chip tier-0" id="tier-chip">Focused</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="dls-bar" style="width:0%;background:var(--green)"></div>
+      </div>
+    </div>
+
+    <!-- Alert box (shown only on tier 1-3) -->
+    <div class="alert-box" id="alert-box"></div>
+
+    <!-- 4-cell stats -->
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-focus">—</div>
+        <div class="stat-lbl">Focus score</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-streak">—</div>
+        <div class="stat-lbl">Streak (min)</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-interventions">—</div>
+        <div class="stat-lbl">Interventions</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="stat-compliance">—</div>
+        <div class="stat-lbl">Compliance</div>
+      </div>
+    </div>
+
+    <!-- Signal bars -->
+    <div class="signals-card">
+      <div class="signals-title">Live signals</div>
+      <div id="signal-rows"></div>
+    </div>
+
+  </div>
+
+  <div class="live-footer">
+    <button class="btn-override" id="btn-override" style="display:none">Unblock (override)</button>
+    <button class="btn-end" id="btn-end">End session</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3: SESSION SUMMARY
+════════════════════════════════════════════ -->
+<div class="screen summary-screen" id="screen-summary">
+  <div class="header">
+    <div class="logo-mark">
+      <svg class="logo-svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" opacity=".3"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">StudyGuard</div>
+      <div class="header-sub">Session complete</div>
+    </div>
+    <div class="status-pill idle"><span class="pulse"></span>idle</div>
+  </div>
+
+  <div class="summary-body">
+    <div class="summary-title">Session Summary</div>
+
+    <div class="summary-score">
+      <div class="summary-score-num" id="summary-score">—</div>
+      <div class="summary-score-lbl">final focus score</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-val" id="summary-duration">—</div>
+        <div class="stat-lbl">Active minutes</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="summary-streak">—</div>
+        <div class="stat-lbl">Longest streak</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="summary-interventions">—</div>
+        <div class="stat-lbl">Interventions</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" id="summary-compliance">—</div>
+        <div class="stat-lbl">Compliance</div>
+      </div>
+    </div>
+
+    <div class="privacy-note" style="color: #00e5a099">
+      Your data was saved locally and will be used to improve your personal model.
+    </div>
+
+    <button class="btn-new-session" id="btn-new-session">Start new session</button>
+  </div>
+</div>
+
+<script src="sidepanel.js"></script>
+</body>
+</html>

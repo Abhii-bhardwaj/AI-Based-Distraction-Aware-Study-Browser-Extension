@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Study Assistant — Dashboard</title>
+  <script src="chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #070b14; --card: #0f1623; --border: #1a2235;
+      --accent: #6366f1; --accent2: #22d3ee;
+      --green: #10b981; --yellow: #f59e0b; --red: #ef4444;
+      --text: #f1f5f9; --muted: #64748b;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; }
+
+    /* LAYOUT */
+    .app { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 56px 1fr; height: 100vh; }
+
+    /* TOPBAR */
+    .topbar {
+      grid-column: 1/-1;
+      background: #0a0e1a;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+      padding: 0 24px;
+    }
+    .logo { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .brand { font-weight: 700; font-size: 15px; }
+    .brand span { color: var(--accent); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); font-weight: 600; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .backend-status { font-size: 11px; padding: 4px 10px; border-radius: 12px; border: 1px solid; }
+    .backend-online { color: var(--green); border-color: var(--green); background: rgba(16,185,129,.1); }
+    .backend-offline { color: var(--yellow); border-color: var(--yellow); background: rgba(245,158,11,.1); }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: #0a0e1a;
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+    .nav-section { padding: 0 12px; margin-bottom: 20px; }
+    .nav-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 8px; margin-bottom: 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      cursor: pointer; transition: all .2s; margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--border); color: var(--text); }
+    .nav-item.active { background: rgba(99,102,241,.15); color: var(--accent); }
+    .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+    /* DLS CARD IN SIDEBAR */
+    .dls-card {
+      margin: 0 12px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .dls-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .dls-ring-wrapper { position: relative; width: 120px; height: 70px; margin: 0 auto 6px; }
+    .dls-ring-wrapper canvas { width: 120px !important; height: 70px !important; }
+    .dls-number {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600;
+    }
+    .tier-chip {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px; margin-top: 6px;
+    }
+    .tier-0 { background: rgba(16,185,129,.15); color: var(--green); }
+    .tier-1 { background: rgba(245,158,11,.15); color: var(--yellow); }
+    .tier-2 { background: rgba(251,146,60,.15); color: #fb923c; }
+    .tier-3 { background: rgba(239,68,68,.15); color: var(--red); }
+
+    /* MAIN CONTENT */
+    .main { overflow-y: auto; padding: 24px; }
+
+    /* CARDS */
+    .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+    .metrics-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+    .metric-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .metric-card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+    .metric-card .value { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 600; color: var(--accent2); margin-top: 4px; }
+    .metric-card .sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* CHART CARDS */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .chart-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .chart-card h3 { font-size: 13px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .8px; }
+
+    /* SIGNALS */
+    .signals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .signal-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+    }
+    .signal-name { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .signal-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+    .signal-bar { height: 100%; border-radius: 3px; transition: width .5s; }
+    .signal-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
+
+    /* HISTORY TABLE */
+    .history-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px; margin-bottom: 20px;
+    }
+    .history-card h3 { font-size: 13px; color: var(--muted); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .8px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { font-size: 11px; color: var(--muted); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    td { font-size: 13px; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+
+    /* TABS IN MAIN */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* BACKEND PAGE */
+    .backend-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    }
+    .backend-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--accent); }
+    .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .form-row label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
+    .form-row input {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      padding: 8px 12px; border-radius: 8px; font-size: 13px; width: 100%;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .form-row input:focus { outline: none; border-color: var(--accent); }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row .k { color: var(--muted); }
+    .stat-row .v { font-family: 'JetBrains Mono', monospace; color: var(--accent2); }
+
+    /* BUTTONS */
+    .btn {
+      padding: 8px 18px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); border-radius: 8px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all .2s; font-family: 'Space Grotesk', sans-serif;
+    }
+    .btn:hover { background: var(--border); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); }
+    .btn.primary:hover { background: #4f46e5; }
+    .btn.danger { background: rgba(239,68,68,.1); border-color: var(--red); color: var(--red); }
+    .btn.danger:hover { background: rgba(239,68,68,.2); }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">🧠</div>
+    <div class="brand">Study<span>Guard</span></div>
+    <div class="topbar-right">
+      <div class="live-badge"><div class="dot"></div> MONITORING</div>
+      <div class="backend-status backend-offline" id="backendBadge">⚡ Backend: Checking...</div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="dls-card">
+      <div class="dls-label">Distraction Score</div>
+      <div class="dls-ring-wrapper">
+        <canvas id="miniGauge"></canvas>
+        <div class="dls-number" id="dlsNum">0%</div>
+      </div>
+      <div class="tier-chip tier-0" id="tierChip">✅ Focused</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item active" data-page="overview"><span class="nav-icon">📊</span> Overview</div>
+      <div class="nav-item" data-page="signals"><span class="nav-icon">📡</span> Live Signals</div>
+      <div class="nav-item" data-page="history"><span class="nav-icon">📅</span> Session History</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" data-page="backend"><span class="nav-icon">🖥️</span> Backend / API</div>
+      <div class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span> Settings</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- OVERVIEW PAGE -->
+    <div class="page active" id="page-overview">
+      <div class="section-title">Session Overview</div>
+
+      <div class="metrics-row">
+        <div class="metric-card"><div class="label">Focus Score</div><div class="value" id="focusScore">—</div><div class="sub">/ 100</div></div>
+        <div class="metric-card"><div class="label">Patience Index</div><div class="value" id="patienceIdx">—</div><div class="sub">% focused</div></div>
+        <div class="metric-card"><div class="label">Distraction %</div><div class="value" id="distrPct">—</div><div class="sub">of windows</div></div>
+        <div class="metric-card"><div class="label">Focus Streak</div><div class="value" id="streak">—</div><div class="sub">min (best)</div></div>
+        <div class="metric-card"><div class="label">Interventions</div><div class="value" id="interventions">—</div><div class="sub">this session</div></div>
+        <div class="metric-card"><div class="label">Compliance</div><div class="value" id="complianceRate">—</div><div class="sub">notif response</div></div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>DLS Over Time (this session)</h3>
+          <canvas id="dlsChart" height="140"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Recent Sessions</h3>
+          <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+            <button class="btn metric-btn active" data-metric="focusScore" style="padding:4px 10px;font-size:11px;">Focus Score</button>
+            <button class="btn metric-btn" data-metric="distractionPct" style="padding:4px 10px;font-size:11px;">Distraction %</button>
+            <button class="btn metric-btn" data-metric="patienceIndex" style="padding:4px 10px;font-size:11px;">Patience</button>
+            <button class="btn metric-btn" data-metric="longestStreak" style="padding:4px 10px;font-size:11px;">Streak</button>
+          </div>
+          <canvas id="histChart" height="140"></canvas>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="newSessionBtn">🔄 New Session</button>
+        <button class="btn" id="forceNotifBtn">🔔 Test Notification</button>
+        <button class="btn danger" id="clearDataBtn">🗑️ Clear All Data</button>
+      </div>
+    </div>
+
+    <!-- SIGNALS PAGE -->
+    <div class="page" id="page-signals">
+      <div class="section-title">Live Behavioral Signals</div>
+      <div class="signals-grid" id="signalsGrid"></div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div class="page" id="page-history">
+      <div class="section-title">Session History</div>
+      <div class="history-card">
+        <h3>All Sessions (last 30)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Date & Time</th><th>Duration</th>
+              <th>Focus Score</th><th>Distraction %</th><th>Patience</th><th>Streak</th><th>Interventions</th><th>Compliance</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BACKEND PAGE -->
+    <div class="page" id="page-backend">
+      <div class="section-title">Backend & API Status</div>
+
+      <div class="backend-card">
+        <h3>🖥️ Node.js Server Connection</h3>
+        <div class="stat-row"><span class="k">Server URL</span><span class="v" id="serverUrl">http://localhost:3001</span></div>
+        <div class="stat-row"><span class="k">Status</span><span class="v" id="serverStatus">Checking...</span></div>
+        <div class="stat-row"><span class="k">Last Sync</span><span class="v" id="lastSync">Never</span></div>
+        <div class="stat-row"><span class="k">Total Sessions Stored (DB)</span><span class="v" id="dbSessions">—</span></div>
+        <div class="stat-row"><span class="k">Total Snapshots Stored (DB)</span><span class="v" id="dbSnapshots">—</span></div>
+        <div class="btn-row">
+          <button class="btn primary" id="testBackendBtn">🔌 Test Connection</button>
+          <button class="btn" id="forceSyncBtn">⬆️ Force Sync Now</button>
+        </div>
+      </div>
+
+      <div class="backend-card">
+        <h3>🤖 ML Model Weights (from Backend)</h3>
+        <div id="weightsDisplay"></div>
+        <div class="btn-row">
+          <button class="btn" id="fetchWeightsBtn">🔄 Fetch Latest Weights</button>
+        </div>
+      </div>
+
+      <div class="backend-card">
+        <h3>📋 How to Start the Backend</h3>
+        <pre style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;color:#94a3b8;font-family:'JetBrains Mono',monospace;line-height:1.8">
+cd distraction-extension/backend
+npm install
+node server.js
+
+# Server will start on http://localhost:3001
+# Extension auto-syncs every 30 seconds</pre>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="section-title">Settings</div>
+      <div class="backend-card">
+        <h3>⚙️ DLS Thresholds</h3>
+        <div class="stat-row"><span class="k">Tier 1 Warning</span><span class="v">DLS ≥ 0.50</span></div>
+        <div class="stat-row"><span class="k">Tier 2 Research Mode</span><span class="v">DLS ≥ 0.65</span></div>
+        <div class="stat-row"><span class="k">Tier 3 Full Block</span><span class="v">DLS ≥ 0.78</span></div>
+        <div class="stat-row"><span class="k">Scoring Interval</span><span class="v">Every 10 seconds</span></div>
+        <div class="stat-row"><span class="k">Backend Sync Interval</span><span class="v">Every 30 seconds</span></div>
+        <div class="stat-row"><span class="k">Recalibration Interval</span><span class="v">Every 60 minutes</span></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script src="dashboard.js"></script>
+</body>
+</html>

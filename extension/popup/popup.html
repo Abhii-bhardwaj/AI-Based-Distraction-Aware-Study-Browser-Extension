@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Assistant</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0e1a;
+      --card: #111827;
+      --border: #1f2937;
+      --accent: #6366f1;
+      --accent2: #22d3ee;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+
+    body {
+      width: 380px;
+      min-height: 520px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header-title { font-size: 15px; font-weight: 700; }
+    .header-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .status-dot {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--muted);
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* DLS GAUGE */
+    .gauge-section {
+      padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .gauge-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .gauge-wrapper { position: relative; width: 160px; height: 90px; }
+    .gauge-wrapper canvas { width: 160px !important; height: 90px !important; }
+    .gauge-value {
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px; font-weight: 600;
+      color: var(--text);
+    }
+    .gauge-sublabel {
+      font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center;
+    }
+
+    /* TIER BADGE */
+    .tier-badge {
+      margin: 0 20px 16px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .tier-0 { background: #052e16; color: var(--green); border: 1px solid #166534; }
+    .tier-1 { background: #451a03; color: var(--yellow); border: 1px solid #92400e; }
+    .tier-2 { background: #431407; color: #fb923c; border: 1px solid #c2410c; }
+    .tier-3 { background: #450a0a; color: var(--red); border: 1px solid #991b1b; }
+
+    /* METRICS GRID */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 20px 16px;
+    }
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px; font-weight: 600;
+      margin-top: 4px;
+      color: var(--accent2);
+    }
+    .metric-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    /* HISTORY CHART */
+    .chart-section {
+      padding: 0 20px 16px;
+    }
+    .section-title {
+      font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .chart-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    /* TABS */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin: 0 20px 16px;
+    }
+    .tab {
+      flex: 1; padding: 8px;
+      font-size: 11px; font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* FEATURES SECTION */
+    .features-section { padding: 0 20px 16px; display: none; }
+    .features-section.active { display: block; }
+    .live-section { display: block; }
+    .live-section.hidden { display: none; }
+
+    .feature-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .feature-row:last-child { border-bottom: none; }
+    .feature-name { font-size: 11px; flex: 1; color: var(--muted); }
+    .feature-bar-bg {
+      width: 100px; height: 6px;
+      background: var(--border);
+      border-radius: 3px; overflow: hidden;
+    }
+    .feature-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
+    .feature-val { font-size: 11px; font-family: 'JetBrains Mono', monospace; width: 32px; text-align: right; }
+
+    /* FOOTER */
+    .footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 8px;
+    }
+    .btn {
+      flex: 1; padding: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 7px;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .btn:hover { background: var(--border); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); }
+    .btn.primary:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">🧠</div>
+    <div>
+      <div class="header-title">Study Assistant</div>
+      <div class="header-sub">Distraction Monitor</div>
+    </div>
+    <div class="status-dot">
+      <div class="dot"></div>
+      <span>LIVE</span>
+    </div>
+  </div>
+
+  <!-- GAUGE -->
+  <div class="gauge-section">
+    <div class="gauge-label">Distraction Likelihood Score</div>
+    <div class="gauge-wrapper">
+      <canvas id="gaugeChart"></canvas>
+      <div class="gauge-value" id="dlsValue">0%</div>
+    </div>
+    <div class="gauge-sublabel" id="dlsSubLabel">Fully focused 🎯</div>
+  </div>
+
+  <!-- TIER BADGE -->
+  <div class="tier-badge tier-0" id="tierBadge">✅ Tier 0 — No Intervention</div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <div class="tab active" data-tab="live">Live Stats</div>
+    <div class="tab" data-tab="features">Signals</div>
+    <div class="tab" data-tab="history">History</div>
+  </div>
+
+  <!-- LIVE STATS TAB -->
+  <div class="live-section" id="tab-live">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Focus Score</div>
+        <div class="metric-value" id="focusScore">—</div>
+        <div class="metric-sub">out of 100</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Patience Index</div>
+        <div class="metric-value" id="patienceIndex">—</div>
+        <div class="metric-sub">% focused time</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Distraction %</div>
+        <div class="metric-value" id="distractionPct">—</div>
+        <div class="metric-sub">of windows</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Focus Streak</div>
+        <div class="metric-value" id="focusStreak">—</div>
+        <div class="metric-sub">min (longest)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Interventions</div>
+        <div class="metric-value" id="interventionCount">—</div>
+        <div class="metric-sub">this session</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Session Time</div>
+        <div class="metric-value" id="sessionTime">—</div>
+        <div class="metric-sub">minutes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNALS TAB -->
+  <div class="features-section" id="tab-features">
+    <div class="chart-box">
+      <div id="featureRows"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div class="features-section" id="tab-history">
+    <div class="section-title">Session Focus Scores</div>
+    <div class="chart-box">
+      <canvas id="historyChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <button class="btn" id="resetBtn">🔄 New Session</button>
+    <button class="btn primary" id="focusBtn">🎯 Force Focus</button>
+  </div>
+
+<script>
+// ---- GAUGE CHART ----
+const gaugeCtx = document.getElementById('gaugeChart').getContext('2d');
+const gaugeChart = new Chart(gaugeCtx, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [0, 100],
+      backgroundColor: ['#6366f1', '#1f2937'],
+      borderWidth: 0,
+      circumference: 180,
+      rotation: 270
+    }]
+  },
+  options: {
+    responsive: false,
+    cutout: '75%',
+    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+  }
+});
+
+// ---- HISTORY CHART ----
+const histCtx = document.getElementById('historyChart').getContext('2d');
+const historyChart = new Chart(histCtx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Focus Score',
+      data: [],
+      borderColor: '#6366f1',
+      backgroundColor: 'rgba(99,102,241,0.15)',
+      borderWidth: 2,
+      pointRadius: 3,
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        min: 0, max: 100,
+        grid: { color: '#1f2937' },
+        ticks: { color: '#64748b', font: { size: 10 } }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: '#64748b', font: { size: 9 }, maxTicksLimit: 6 }
+      }
+    }
+  }
+});
+
+const TIER_LABELS = [
+  { cls: 'tier-0', text: '✅ Tier 0 — Fully Focused' },
+  { cls: 'tier-1', text: '⚠️ Tier 1 — Warning Issued' },
+  { cls: 'tier-2', text: '📚 Tier 2 — Research Mode Active' },
+  { cls: 'tier-3', text: '🚫 Tier 3 — Full Restriction' }
+];
+
+const DLS_LABELS = [
+  'Fully focused 🎯',
+  'Mild distraction detected',
+  'Moderate distraction',
+  'High distraction level!',
+  '🚨 Critical distraction!'
+];
+
+const FEATURE_NAMES = {
+  tabSwitchFreq: 'Tab Switch Freq',
+  idleDuration: 'Idle Duration',
+  scrollIrregularity: 'Scroll Irregularity',
+  keystrokeVariance: 'Keystroke Variance',
+  domainRevisitFreq: 'Distracting Domains',
+  timeOfDayWeight: 'Time-of-Day Factor'
+};
+
+function getFeatureColor(val) {
+  if (val < 0.3) return '#10b981';
+  if (val < 0.6) return '#f59e0b';
+  return '#ef4444';
+}
+
+function updateUI(data) {
+  // Gauge
+  const dls = data.currentDLS || 0;
+  const pct = Math.round(dls * 100);
+  gaugeChart.data.datasets[0].data = [pct, 100 - pct];
+  const color = dls < 0.5 ? '#10b981' : dls < 0.65 ? '#f59e0b' : dls < 0.78 ? '#fb923c' : '#ef4444';
+  gaugeChart.data.datasets[0].backgroundColor[0] = color;
+  gaugeChart.update('none');
+
+  document.getElementById('dlsValue').textContent = pct + '%';
+  document.getElementById('dlsValue').style.color = color;
+  document.getElementById('dlsSubLabel').textContent = DLS_LABELS[Math.min(Math.floor(dls * 5), 4)];
+
+  // Tier badge
+  const tier = data.currentTier || 0;
+  const badge = document.getElementById('tierBadge');
+  badge.className = 'tier-badge ' + TIER_LABELS[tier].cls;
+  badge.textContent = TIER_LABELS[tier].text;
+
+  // Metrics
+  document.getElementById('focusScore').textContent = data.focusScore ?? '—';
+  document.getElementById('patienceIndex').textContent = (data.patienceIndex ?? '—') + '%';
+  document.getElementById('distractionPct').textContent = (data.distractionPercentage ?? '—') + '%';
+  document.getElementById('focusStreak').textContent = data.longestStreak ?? '—';
+  document.getElementById('interventionCount').textContent = data.interventionCount ?? '—';
+  document.getElementById('sessionTime').textContent = data.sessionDuration ?? '—';
+
+  // Feature signals
+  if (data.features) {
+    const container = document.getElementById('featureRows');
+    container.innerHTML = Object.entries(data.features).map(([key, val]) => `
+      <div class="feature-row">
+        <span class="feature-name">${FEATURE_NAMES[key] || key}</span>
+        <div class="feature-bar-bg">
+          <div class="feature-bar" style="width:${Math.round(val*100)}%;background:${getFeatureColor(val)}"></div>
+        </div>
+        <span class="feature-val" style="color:${getFeatureColor(val)}">${Math.round(val*100)}%</span>
+      </div>
+    `).join('');
+  }
+}
+
+function updateHistory(sessions) {
+  if (!sessions || sessions.length === 0) return;
+  const last10 = sessions.slice(-10);
+  historyChart.data.labels = last10.map((_, i) => `S${i + 1}`);
+  historyChart.data.datasets[0].data = last10.map(s => s.focusScore || 0);
+  historyChart.update();
+}
+
+// ---- LOAD DATA ----
+async function loadData() {
+  const { liveData, sessionHistory } = await chrome.storage.local.get(['liveData', 'sessionHistory']);
+  if (liveData) updateUI(liveData);
+  if (sessionHistory) updateHistory(sessionHistory);
+}
+
+loadData();
+setInterval(loadData, 5000); // Refresh every 5 seconds
+
+// ---- TABS ----
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const name = tab.dataset.tab;
+    document.getElementById('tab-live').style.display = name === 'live' ? 'block' : 'none';
+    document.getElementById('tab-features').style.display = name === 'features' ? 'block' : 'none';
+    document.getElementById('tab-history').style.display = name === 'history' ? 'block' : 'none';
+  });
+});
+
+// ---- BUTTONS ----
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  await chrome.storage.local.remove('liveData');
+  chrome.runtime.sendMessage({ type: 'RESET_SESSION' });
+  window.close();
+});
+
+document.getElementById('focusBtn').addEventListener('click', () => {
+  chrome.notifications.create({
+    type: 'basic',
+    iconUrl: '../icons/icon48.png',
+    title: '🎯 Focus Mode',
+    message: 'You manually activated focus mode. Stay on track!'
+  });
+  window.close();
+});
+</script>
+</body>
+</html>

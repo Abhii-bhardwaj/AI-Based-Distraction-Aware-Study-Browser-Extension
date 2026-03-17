@@ -1,0 +1,78 @@
+{
+  "manifest_version": 3,
+  "name": "Distraction-Aware Study Assistant",
+  "version": "2.0.0",
+  "description": "ML-powered browser extension that monitors distraction and helps you stay focused",
+
+  "permissions": [
+    "tabs",
+    "storage",
+    "notifications",
+    "idle",
+    "declarativeNetRequest",
+    "scripting",
+    "alarms",
+    "sidePanel"
+  ],
+
+  "host_permissions": ["<all_urls>"],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Open StudyGuard"
+  },
+
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "distraction_rules",
+        "enabled": false,
+        "path": "rules/distraction_rules.json"
+      },
+      {
+        "id": "research_mode_rules",
+        "enabled": false,
+        "path": "rules/research_mode_rules.json"
+      }
+    ]
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["intervention/block.html"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": [
+        "models/dls_model.onnx",
+        "models/ort.min.js",
+        "models/ort-wasm.wasm",
+        "models/ort-wasm-threaded.wasm"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}

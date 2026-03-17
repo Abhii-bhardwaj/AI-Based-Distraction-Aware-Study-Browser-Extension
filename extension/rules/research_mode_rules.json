@@ -1,0 +1,53 @@
+[
+  {
+    "id": 101,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": {
+      "urlFilter": "*scholar.google.com*",
+      "resourceTypes": ["main_frame"]
+    }
+  },
+  {
+    "id": 102,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*wikipedia.org*", "resourceTypes": ["main_frame"] }
+  },
+  {
+    "id": 103,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*arxiv.org*", "resourceTypes": ["main_frame"] }
+  },
+  {
+    "id": 104,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*github.com*", "resourceTypes": ["main_frame"] }
+  },
+  {
+    "id": 105,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*stackoverflow.com*", "resourceTypes": ["main_frame"] }
+  },
+  {
+    "id": 106,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*coursera.org*", "resourceTypes": ["main_frame"] }
+  },
+  {
+    "id": 107,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*udemy.com*", "resourceTypes": ["main_frame"] }
+  },
+  {
+    "id": 108,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": { "urlFilter": "*khanacademy.org*", "resourceTypes": ["main_frame"] }
+  }
+]
