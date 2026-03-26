@@ -1,5 +1,94 @@
 # 🧠 Distraction-Aware Study Browser Extension
 
+## 📌 Overview
+
+The Distraction-Aware Study Browser Extension is an AI-powered productivity tool designed to help students maintain focus while studying online.
+
+The system monitors behavioral signals such as:
+
+- Tab switching frequency
+- Scroll patterns
+- Idle time
+- Keystroke activity
+- Visits to distracting websites
+
+Using these signals, the system calculates a **Distraction Level Score (DLS)** and dynamically applies interventions such as:
+
+- Warning notifications
+- Research-only browsing mode
+- Temporary website blocking
+
+The goal of this system is to **reduce digital distractions and improve study productivity** using behavioral analytics and machine learning.
+
+
+## 🏗 System Architecture
+
+The system consists of four main components:
+
+1️⃣ **Signal Acquisition (Content Script)**
+- Captures scrolling behavior
+- Detects keystroke activity
+- Monitors user interaction patterns
+
+2️⃣ **Behavior Monitoring (Background Service Worker)**
+- Tracks tab switches
+- Monitors idle activity
+- Collects browsing signals
+
+3️⃣ **Distraction Detection (ML Model)**
+- Feature extraction
+- Distraction Level Score (DLS) prediction
+- ONNX model inference
+
+4️⃣ **Adaptive Intervention Engine**
+- Warning notifications
+- Research browsing mode
+- Website blocking with cooldown
+
+
+## 🧰 Tech Stack
+
+**Frontend**
+- HTML
+- CSS
+- JavaScript
+- Chart.js
+
+**Browser Extension**
+- Chrome Extension Manifest V3
+- Service Workers
+- Content Scripts
+
+**Machine Learning**
+- Python
+- XGBoost
+- scikit-learn
+- ONNX
+
+**Tools**
+- Git & GitHub
+- Chrome DevTools
+
+
+
+## 📷 Screenshots
+
+### Extension Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Block Page
+![Block Page](screenshots/block.png)
+
+### Research Mode
+![Research Mode](screenshots/research_mode.png)
+
+
+## 🎥 Demo
+
+Project demo video:
+
+👉 (Coming Soon)
+
 **Team:** Abhishek Bhardwaj | Aman Saxena | Abhijeet Singh  
 **Institution:** Lovely Professional University | 2026
 
@@ -28,7 +117,7 @@ distraction-extension/
 
 ---
 
-## 🚀 How to Run the Extension
+## ⚙️ Installation
 
 ### Step 1 — Open Chrome Extension Manager
 1. Open **Google Chrome**

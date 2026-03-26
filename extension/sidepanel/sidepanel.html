@@ -9,7 +9,7 @@
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    :root {
+    :root[data-theme="dark"] {
       --bg: #0d0f14;
       --surface: #13161e;
       --card: #181c26;
@@ -17,53 +17,57 @@
       --border2: #2e3347;
       --text: #e8eaf0;
       --muted: #5a6080;
-      --dim: #3a4060;
       --green: #00e5a0;
-      --green-dim: #00e5a018;
-      --green-border: #00e5a030;
+      --green-dim: rgba(0,229,160,0.08);
+      --green-border: rgba(0,229,160,0.18);
       --amber: #ffb830;
-      --amber-dim: #ffb83018;
+      --amber-dim: rgba(255,184,48,0.08);
       --orange: #ff7c40;
-      --orange-dim: #ff7c4018;
+      --orange-dim: rgba(255,124,64,0.08);
       --red: #ff4560;
-      --red-dim: #ff456018;
-      --red-border: #ff456030;
-      --blue: #4d9fff;
-      --blue-dim: #4d9fff14;
+      --red-dim: rgba(255,69,96,0.08);
+      --red-border: rgba(255,69,96,0.18);
+      --blue-dim: rgba(77,159,255,0.08);
       --accent: #7b6fff;
-      --accent-dim: #7b6fff18;
+      --accent-dim: rgba(123,111,255,0.1);
     }
-    /* LIGHT THEME VARIABLES */
-    .light-theme {
-      --bg: #f8fafc;
-      --surface: #fff;
-      --card: #f3f4f6;
-      --border: #e2e8f0;
-      --border2: #cbd5e1;
-      --text: #1e293b;
-      --muted: #64748b;
-      --dim: #e0e7ef;
-      --green: #16a34a;
-      --green-dim: #bbf7d0;
-      --green-border: #86efac;
-      --amber: #eab308;
-      --amber-dim: #fef9c3;
-      --orange: #fb923c;
-      --orange-dim: #ffedd5;
+
+    :root[data-theme="light"] {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --card: #eef0f6;
+      --border: #e2e5ef;
+      --border2: #cdd1e0;
+      --text: #0d0f14;
+      --muted: #6b7280;
+      --green: #059669;
+      --green-dim: rgba(5,150,105,0.08);
+      --green-border: rgba(5,150,105,0.2);
+      --amber: #d97706;
+      --amber-dim: rgba(217,119,6,0.08);
+      --orange: #ea580c;
+      --orange-dim: rgba(234,88,12,0.08);
       --red: #dc2626;
-      --red-dim: #fee2e2;
-      --red-border: #fecaca;
-      --blue: #0ea5e9;
-      --blue-dim: #bae6fd;
-      --accent: #6366f1;
-      --accent-dim: #e0e7ff;
+      --red-dim: rgba(220,38,38,0.08);
+      --red-border: rgba(220,38,38,0.2);
+      --blue-dim: rgba(37,99,235,0.08);
+      --accent: #6d28d9;
+      --accent-dim: rgba(109,40,217,0.08);
     }
-    .theme-toggle {
-      background: var(--card); border: 1px solid var(--border); color: var(--accent);
-      border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer;
-      display: flex; align-items: center; gap: 6px; transition: background .2s;
+
+    .theme-btn {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 1px solid var(--border2);
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
     }
-    .theme-toggle:hover { background: var(--border); }
+    .theme-btn:hover { background: var(--border); color: var(--text); }
 
     body {
       width: 100%;
@@ -90,7 +94,7 @@
     .logo-mark {
       width: 30px; height: 30px; border-radius: 8px;
       background: var(--accent-dim);
-      border: 1px solid #7b6fff40;
+      border: 1px solid var(--accent-dim);
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
@@ -114,7 +118,7 @@
     .consent-hero { text-align: center; padding: 8px 0 4px; }
     .consent-icon {
       width: 52px; height: 52px; border-radius: 14px;
-      background: var(--accent-dim); border: 1px solid #7b6fff30;
+      background: var(--accent-dim); border: 1px solid var(--accent-dim);
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 14px;
     }
@@ -150,7 +154,7 @@
       border: 1px solid var(--green-border);
       border-radius: 8px;
       padding: 10px 12px;
-      font-size: 11px; color: #00e5a0cc;
+      font-size: 11px; color: var(--green);
       line-height: 1.55;
     }
 
@@ -199,8 +203,8 @@
       margin-bottom: 4px;
     }
     .tier-0 { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
-    .tier-1 { background: var(--amber-dim); color: var(--amber); border: 1px solid #ffb83030; }
-    .tier-2 { background: var(--orange-dim); color: var(--orange); border: 1px solid #ff7c4030; }
+    .tier-1 { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-dim); }
+    .tier-2 { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-dim); }
     .tier-3 { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
 
     .progress-track { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 10px; }
@@ -244,9 +248,9 @@
       border-radius: 10px; padding: 12px;
       font-size: 12px; line-height: 1.6; display: none;
     }
-    .alert-box.tier3 { background: var(--red-dim); border: 1px solid var(--red-border); color: #ff7c9a; display: block; }
-    .alert-box.tier2 { background: var(--orange-dim); border: 1px solid #ff7c4030; color: #ffaa80; display: block; }
-    .alert-box.tier1 { background: var(--amber-dim); border: 1px solid #ffb83030; color: #ffd07a; display: block; }
+    .alert-box.tier3 { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); display: block; }
+    .alert-box.tier2 { background: var(--orange-dim); border: 1px solid var(--orange-dim); color: var(--orange); display: block; }
+    .alert-box.tier1 { background: var(--amber-dim); border: 1px solid var(--amber-dim); color: var(--amber); display: block; }
 
     /* Footer actions */
     .live-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
@@ -288,6 +292,14 @@
       transition: opacity .15s;
     }
     .btn-new-session:hover { opacity: .9; }
+    .btn-dashboard {
+      padding: 12px; margin-top: -6px;
+      background: transparent; border: 1px solid var(--accent); border-radius: 10px;
+      color: var(--accent); font-family: 'Sora', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-dashboard:hover { background: var(--accent-dim); }
   </style>
 </head>
 <body>
@@ -308,6 +320,9 @@
     <div class="status-pill idle">
       <span class="pulse"></span>idle
     </div>
+    <button class="theme-btn" id="theme-toggle-consent">
+      <span class="theme-icon">☾</span>
+    </button>
   </div>
 
   <div class="consent-body">
@@ -375,10 +390,13 @@
       <div class="header-title">StudyGuard</div>
       <div class="header-sub" id="session-timer">0 min active</div>
     </div>
-    <button class="theme-toggle" id="themeToggleBtn" name="themeToggleBtn" title="Toggle light/dark mode">🌞 Day</button>
+    <button class="theme-toggle" id="themeToggleBtn" name="themeToggleBtn" title="Toggle light/dark mode" style="display:none">🌞 Day</button>
     <div class="status-pill live" id="header-status">
       <span class="pulse"></span><span id="status-text">live</span>
     </div>
+    <button class="theme-btn" id="theme-toggle-live">
+      <span class="theme-icon">☾</span>
+    </button>
   </div>
 
   <div class="live-body">
@@ -447,6 +465,9 @@
       <div class="header-sub">Session complete</div>
     </div>
     <div class="status-pill idle"><span class="pulse"></span>idle</div>
+    <button class="theme-btn" id="theme-toggle-summary">
+      <span class="theme-icon">☾</span>
+    </button>
   </div>
 
   <div class="summary-body">
@@ -476,11 +497,12 @@
       </div>
     </div>
 
-    <div class="privacy-note" style="color: #00e5a099">
+    <div class="privacy-note" style="color: var(--green)">
       Your data was saved locally and will be used to improve your personal model.
     </div>
 
     <button class="btn-new-session" id="btn-new-session">Start new session</button>
+    <button class="btn-dashboard" id="btn-dashboard">View full dashboard</button>
   </div>
 </div>
 

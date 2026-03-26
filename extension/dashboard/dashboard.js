@@ -206,35 +206,33 @@ const root = document.documentElement;
 
 function applyTheme(theme) {
   if (theme === 'light') {
-    root.classList.add('light-theme');
+    root.setAttribute('data-theme', 'light');
     if (themeBtn) themeBtn.innerHTML = '🌙 Night';
   } else {
-    root.classList.remove('light-theme');
+    root.removeAttribute('data-theme');
     if (themeBtn) themeBtn.innerHTML = '🌞 Day';
   }
 }
 
 async function setTheme(light) {
   const theme = light ? 'light' : 'dark';
-  await chrome.storage.local.set({ theme });
-  applyTheme(theme);
-  chrome.runtime.sendMessage({ type: 'THEME_CHANGED', theme });
+  await chrome.storage.local.set({ userTheme: theme });
 }
 
 if (themeBtn) {
-  themeBtn.addEventListener('click', async () => {
-    const current = root.classList.contains('light-theme');
-    await setTheme(!current);
+  themeBtn.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme') === 'light';
+    setTheme(!current);
   });
 }
 
-chrome.storage.local.get('theme', ({ theme }) => {
-  applyTheme(theme === 'light' ? 'light' : 'dark');
+chrome.storage.local.get('userTheme', ({ userTheme }) => {
+  applyTheme(userTheme === 'light' ? 'light' : 'dark');
 });
 
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'THEME_CHANGED') {
-    applyTheme(msg.theme);
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.userTheme) {
+    applyTheme(changes.userTheme.newValue);
   }
 });
 

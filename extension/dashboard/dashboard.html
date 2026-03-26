@@ -15,7 +15,7 @@
       --text: #f1f5f9; --muted: #64748b;
     }
     /* LIGHT THEME VARIABLES */
-    .light-theme {
+    :root[data-theme="light"] {
       --bg: #f8fafc; --card: #fff; --border: #e2e8f0;
       --accent: #6366f1; --accent2: #0ea5e9;
       --green: #16a34a; --yellow: #eab308; --red: #dc2626;
@@ -36,7 +36,7 @@
     /* TOPBAR */
     .topbar {
       grid-column: 1/-1;
-      background: #0a0e1a;
+      background: var(--card);
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; gap: 14px;
       padding: 0 24px;
@@ -54,7 +54,7 @@
 
     /* SIDEBAR */
     .sidebar {
-      background: #0a0e1a;
+      background: var(--card);
       border-right: 1px solid var(--border);
       padding: 20px 0;
       overflow-y: auto;

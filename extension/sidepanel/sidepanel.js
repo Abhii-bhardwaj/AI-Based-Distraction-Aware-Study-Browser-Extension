@@ -1,3 +1,52 @@
+// ── THEME SYSTEM ──────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  document.querySelectorAll(".theme-icon").forEach((el) => {
+    el.textContent = theme === "dark" ? "☾" : "☀";
+  });
+  chrome.storage.local.set({ userTheme: theme });
+}
+
+function initTheme() {
+  chrome.storage.local.get("userTheme", ({ userTheme }) => {
+    if (userTheme) {
+      applyTheme(userTheme);
+    } else {
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      applyTheme(isDark ? "dark" : "light");
+    }
+  });
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme");
+  applyTheme(current === "dark" ? "light" : "dark");
+}
+
+window
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", (e) => {
+    chrome.storage.local.get("userTheme", ({ userTheme }) => {
+      if (!userTheme) applyTheme(e.matches ? "dark" : "light");
+    });
+  });
+
+initTheme();
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.userTheme) {
+    applyTheme(changes.userTheme.newValue);
+  }
+});
+
+["theme-toggle-consent", "theme-toggle-live", "theme-toggle-summary"].forEach(
+  (id) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", toggleTheme);
+  },
+);
+
+// ── SCREEN SWITCHER ───────────────────────────────────────────
 function showScreen(id) {
   document
     .querySelectorAll(".screen")
@@ -12,6 +61,11 @@ document.getElementById("btn-start").addEventListener("click", () => {
     () => {
       showScreen("screen-live");
       startPolling();
+      // Close sidepanel — floating widget takes over from here
+      // 300ms delay ensures storage write completes before close
+      setTimeout(() => {
+        window.close();
+      }, 300);
     },
   );
 });
@@ -55,61 +109,24 @@ document.getElementById("btn-new-session").addEventListener("click", () => {
   });
 });
 
+document.getElementById("btn-dashboard").addEventListener("click", () => {
+  chrome.runtime.sendMessage({ type: "OPEN_DASHBOARD" });
+});
+
 // ── OVERRIDE BUTTON ───────────────────────────────────────────
-document.getElementById("btn-override").addEventListener("click", async () => {
-  // Increment override count directly in storage
-  const { swState } = await chrome.storage.local.get("swState");
-  if (swState) {
-    swState.overrideCount = (swState.overrideCount || 0) + 1;
-    await chrome.storage.local.set({ swState });
-  }
+document.getElementById("btn-override").addEventListener("click", () => {
+  chrome.storage.local.get("swState", ({ swState }) => {
+    if (swState) {
+      swState.overrideCount = (swState.overrideCount || 0) + 1;
+      chrome.storage.local.set({ swState });
+    }
+  });
   try {
-    await chrome.declarativeNetRequest.updateEnabledRulesets({
+    chrome.declarativeNetRequest.updateEnabledRulesets({
       disableRulesetIds: ["distraction_rules", "research_mode_rules"],
     });
   } catch (e) {}
   document.getElementById("btn-override").style.display = "none";
-});
-
-// ── THEME TOGGLE (GLOBAL) ──────────────────────────────────
-const themeBtn = document.getElementById('themeToggleBtn');
-const root = document.documentElement;
-
-function applyTheme(theme) {
-  if (theme === 'light') {
-    root.classList.add('light-theme');
-    if (themeBtn) themeBtn.innerHTML = '🌙 Night';
-  } else {
-    root.classList.remove('light-theme');
-    if (themeBtn) themeBtn.innerHTML = '🌞 Day';
-  }
-}
-
-async function setTheme(light) {
-  const theme = light ? 'light' : 'dark';
-  await chrome.storage.local.set({ theme });
-  applyTheme(theme);
-  // Notify all extension pages
-  chrome.runtime.sendMessage({ type: 'THEME_CHANGED', theme });
-}
-
-if (themeBtn) {
-  themeBtn.addEventListener('click', async () => {
-    const current = root.classList.contains('light-theme');
-    await setTheme(!current);
-  });
-}
-
-// On load, apply theme from chrome.storage.local
-chrome.storage.local.get('theme', ({ theme }) => {
-  applyTheme(theme === 'light' ? 'light' : 'dark');
-});
-
-// Listen for theme changes from other pages
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'THEME_CHANGED') {
-    applyTheme(msg.theme);
-  }
 });
 
 // ── LIVE UI UPDATE ─────────────────────────────────────────────
@@ -246,16 +263,16 @@ function stopPolling() {
   }
 }
 
-async function loadAndRender() {
-  const { liveData } = await chrome.storage.local.get("liveData");
-  updateLiveUI(liveData);
+function loadAndRender() {
+  chrome.storage.local.get("liveData", ({ liveData }) => {
+    updateLiveUI(liveData);
+  });
 }
 
 // ── INIT: check if session already active ────────────────────
-(async () => {
-  const { trackingEnabled } = await chrome.storage.local.get("trackingEnabled");
+chrome.storage.local.get("trackingEnabled", ({ trackingEnabled }) => {
   if (trackingEnabled) {
     showScreen("screen-live");
     startPolling();
   }
-})();
+});
