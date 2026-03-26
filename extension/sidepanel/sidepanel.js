@@ -71,6 +71,47 @@ document.getElementById("btn-override").addEventListener("click", async () => {
   document.getElementById("btn-override").style.display = "none";
 });
 
+// ── THEME TOGGLE (GLOBAL) ──────────────────────────────────
+const themeBtn = document.getElementById('themeToggleBtn');
+const root = document.documentElement;
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    root.classList.add('light-theme');
+    if (themeBtn) themeBtn.innerHTML = '🌙 Night';
+  } else {
+    root.classList.remove('light-theme');
+    if (themeBtn) themeBtn.innerHTML = '🌞 Day';
+  }
+}
+
+async function setTheme(light) {
+  const theme = light ? 'light' : 'dark';
+  await chrome.storage.local.set({ theme });
+  applyTheme(theme);
+  // Notify all extension pages
+  chrome.runtime.sendMessage({ type: 'THEME_CHANGED', theme });
+}
+
+if (themeBtn) {
+  themeBtn.addEventListener('click', async () => {
+    const current = root.classList.contains('light-theme');
+    await setTheme(!current);
+  });
+}
+
+// On load, apply theme from chrome.storage.local
+chrome.storage.local.get('theme', ({ theme }) => {
+  applyTheme(theme === 'light' ? 'light' : 'dark');
+});
+
+// Listen for theme changes from other pages
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'THEME_CHANGED') {
+    applyTheme(msg.theme);
+  }
+});
+
 // ── LIVE UI UPDATE ─────────────────────────────────────────────
 const SIGNAL_LABELS = {
   tabSwitchFreq: ["Tab switch freq", false],

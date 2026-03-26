@@ -14,6 +14,20 @@
       --green: #10b981; --yellow: #f59e0b; --red: #ef4444;
       --text: #f1f5f9; --muted: #64748b;
     }
+    /* LIGHT THEME VARIABLES */
+    .light-theme {
+      --bg: #f8fafc; --card: #fff; --border: #e2e8f0;
+      --accent: #6366f1; --accent2: #0ea5e9;
+      --green: #16a34a; --yellow: #eab308; --red: #dc2626;
+      --text: #1e293b; --muted: #64748b;
+    }
+    .theme-toggle {
+      background: var(--card); border: 1px solid var(--border); color: var(--accent);
+      border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: background .2s;
+    }
+    .theme-toggle:hover { background: var(--border); }
+
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; }
 
     /* LAYOUT */
@@ -174,6 +188,7 @@
     <div class="logo">🧠</div>
     <div class="brand">Study<span>Guard</span></div>
     <div class="topbar-right">
+      <button class="theme-toggle" id="themeToggleBtn" title="Toggle light/dark mode">🌞 Day</button>
       <div class="live-badge"><div class="dot"></div> MONITORING</div>
       <div class="backend-status backend-offline" id="backendBadge">⚡ Backend: Checking...</div>
     </div>

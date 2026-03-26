@@ -33,6 +33,37 @@
       --accent: #7b6fff;
       --accent-dim: #7b6fff18;
     }
+    /* LIGHT THEME VARIABLES */
+    .light-theme {
+      --bg: #f8fafc;
+      --surface: #fff;
+      --card: #f3f4f6;
+      --border: #e2e8f0;
+      --border2: #cbd5e1;
+      --text: #1e293b;
+      --muted: #64748b;
+      --dim: #e0e7ef;
+      --green: #16a34a;
+      --green-dim: #bbf7d0;
+      --green-border: #86efac;
+      --amber: #eab308;
+      --amber-dim: #fef9c3;
+      --orange: #fb923c;
+      --orange-dim: #ffedd5;
+      --red: #dc2626;
+      --red-dim: #fee2e2;
+      --red-border: #fecaca;
+      --blue: #0ea5e9;
+      --blue-dim: #bae6fd;
+      --accent: #6366f1;
+      --accent-dim: #e0e7ff;
+    }
+    .theme-toggle {
+      background: var(--card); border: 1px solid var(--border); color: var(--accent);
+      border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: background .2s;
+    }
+    .theme-toggle:hover { background: var(--border); }
 
     body {
       width: 100%;
@@ -273,6 +304,7 @@
       <div class="header-title">StudyGuard</div>
       <div class="header-sub">ML-powered focus assistant</div>
     </div>
+    <!-- <button class="theme-toggle" name="themeToggleBtn" id="themeToggleBtn" title="Toggle light/dark mode">🌞 Day</button> -->
     <div class="status-pill idle">
       <span class="pulse"></span>idle
     </div>
@@ -343,6 +375,7 @@
       <div class="header-title">StudyGuard</div>
       <div class="header-sub" id="session-timer">0 min active</div>
     </div>
+    <button class="theme-toggle" id="themeToggleBtn" name="themeToggleBtn" title="Toggle light/dark mode">🌞 Day</button>
     <div class="status-pill live" id="header-status">
       <span class="pulse"></span><span id="status-text">live</span>
     </div>
