@@ -194,6 +194,19 @@ function injectFloatingWidget() {
         transition: background 0.5s;
       }
 
+      /* Three.js orb canvas — replaces orb-fill when loaded */
+      .orb-canvas {
+        position: absolute; inset: 0;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.4s;
+      }
+      .orb-canvas.ready { opacity: 1; }
+      /* hide the CSS fill when canvas is ready */
+      .orb-canvas.ready ~ .orb-fill,
+      .orb-fill.hidden { opacity: 0; }
+
       .orb-score {
         position: relative; z-index: 1;
         font-family: 'JetBrains Mono', monospace;
@@ -350,6 +363,7 @@ function injectFloatingWidget() {
     <div id="widget">
       <!-- Collapsed orb -->
       <div class="orb" id="orb-btn">
+        <canvas class="orb-canvas" id="orb-canvas" width="56" height="56"></canvas>
         <div class="orb-ring c0" id="orb-ring"></div>
         <div class="orb-fill" id="orb-fill" style="background:#00e5a020"></div>
         <span class="orb-score" id="orb-score">0%</span>
@@ -449,7 +463,9 @@ function injectFloatingWidget() {
     if (!isDragging) return;
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
-    setPos(startRight - dx, startBottom + dy);
+    // right decreases as mouse moves right (mirror X)
+    // bottom decreases as mouse moves down (mirror Y) — subtract dy
+    setPos(startRight - dx, startBottom - dy);
   });
 
   document.addEventListener("mouseup", (e) => {
@@ -490,7 +506,7 @@ function injectFloatingWidget() {
       const t = e.touches[0];
       setPos(
         startRight - (t.clientX - dragStartX),
-        startBottom + (t.clientY - dragStartY),
+        startBottom - (t.clientY - dragStartY),
       );
     },
     { passive: true },
@@ -579,6 +595,9 @@ function injectFloatingWidget() {
     if (tier === 3) widget.classList.add("tier3-pulse");
     else widget.classList.remove("tier3-pulse");
 
+    // Drive Three.js orb if loaded
+    if (_orbScene) _orbScene.setDLS(dls, tier);
+
     // Card score
     const csEl = shadow.getElementById("card-score");
     csEl.textContent = pct;
@@ -631,16 +650,195 @@ function injectFloatingWidget() {
     );
   }
 
+  // ── THREE.JS ORB ──────────────────────────────────────────
+  // Three.js is loaded dynamically from web_accessible_resources.
+  // It attaches to the page's window object, which content scripts share.
+  let _orbScene = null;
+
+  function initOrbScene() {
+    if (!window.THREE) return;
+    if (_orbScene) return;
+
+    const canvas = shadow.getElementById("orb-canvas");
+    if (!canvas) return;
+
+    const SIZE = 56;
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(SIZE, SIZE);
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.z = 2.8;
+
+    // Sphere geometry — smooth icosphere-like
+    const geometry = new THREE.SphereGeometry(1, 32, 32);
+
+    // Main sphere material — MeshPhongMaterial for specular highlight
+    const material = new THREE.MeshPhongMaterial({
+      color: new THREE.Color(0x00e5a0),
+      emissive: new THREE.Color(0x003322),
+      shininess: 80,
+      transparent: true,
+      opacity: 0.92,
+    });
+
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+
+    // Outer glow shell — slightly larger, additive-like
+    const glowGeo = new THREE.SphereGeometry(1.18, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(0x00e5a0),
+      transparent: true,
+      opacity: 0.08,
+      side: THREE.BackSide,
+    });
+    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    scene.add(glowMesh);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 1.4, 10);
+    pointLight.position.set(2, 2, 3);
+    scene.add(pointLight);
+
+    const rimLight = new THREE.PointLight(0x4488ff, 0.5, 8);
+    rimLight.position.set(-2, -1, -2);
+    scene.add(rimLight);
+
+    // Tier color palette — matches the widget's existing color scheme
+    const TIER_COLORS_THREE = [
+      { sphere: 0x00e5a0, emissive: 0x003322, glow: 0x00e5a0 }, // tier 0 green
+      { sphere: 0xffb830, emissive: 0x332200, glow: 0xffb830 }, // tier 1 amber
+      { sphere: 0xff7c40, emissive: 0x331100, glow: 0xff7c40 }, // tier 2 orange
+      { sphere: 0xff4560, emissive: 0x330010, glow: 0xff4560 }, // tier 3 red
+    ];
+
+    let currentDLS = 0;
+    let targetDLS = 0;
+    let currentTier = 0;
+    let animId = null;
+    let elapsed = 0;
+
+    function tick() {
+      elapsed += 0.016; // ~60fps
+
+      // Ease DLS
+      currentDLS += (targetDLS - currentDLS) * 0.04;
+
+      // Rotate sphere — faster when more distracted
+      const rotSpeed = 0.004 + currentDLS * 0.018;
+      sphere.rotation.y += rotSpeed;
+      sphere.rotation.x += rotSpeed * 0.4;
+
+      // Breathe / pulse scale
+      const chaos = currentDLS;
+      const breatheFreq = 1.0 + chaos * 3.0; // faster pulse under distraction
+      const breatheAmp = 0.03 + chaos * 0.06;
+      const scale = 1.0 + Math.sin(elapsed * breatheFreq) * breatheAmp;
+      sphere.scale.setScalar(scale);
+      glowMesh.scale.setScalar(scale * (1.0 + chaos * 0.12));
+
+      // Glow opacity intensifies with distraction
+      glowMat.opacity = 0.06 + chaos * 0.22;
+
+      // Colour — interpolate between tier colours
+      const tierF = Math.min(currentDLS * 3, 2.999);
+      const tIdx = Math.floor(tierF);
+      const tFrac = tierF - tIdx;
+      const cA = TIER_COLORS_THREE[tIdx];
+      const cB = TIER_COLORS_THREE[tIdx + 1];
+      const sphereCol = new THREE.Color(cA.sphere).lerp(
+        new THREE.Color(cB.sphere),
+        tFrac,
+      );
+      const emissiveCol = new THREE.Color(cA.emissive).lerp(
+        new THREE.Color(cB.emissive),
+        tFrac,
+      );
+      const glowCol = new THREE.Color(cA.glow).lerp(
+        new THREE.Color(cB.glow),
+        tFrac,
+      );
+
+      material.color.copy(sphereCol);
+      material.emissive.copy(emissiveCol);
+      glowMat.color.copy(glowCol);
+
+      // Point light colour matches sphere
+      pointLight.color.copy(sphereCol);
+      pointLight.intensity = 1.2 + chaos * 0.8;
+
+      renderer.render(scene, camera);
+      animId = requestAnimationFrame(tick);
+    }
+
+    // Fade in the canvas, hide the CSS fill
+    canvas.classList.add("ready");
+    const orbFill = shadow.getElementById("orb-fill");
+    if (orbFill) orbFill.classList.add("hidden");
+
+    tick();
+
+    _orbScene = {
+      setDLS(dls, tier) {
+        targetDLS = Math.max(0, Math.min(1, dls));
+        currentTier = tier || 0;
+      },
+      destroy() {
+        if (animId) cancelAnimationFrame(animId);
+        renderer.dispose();
+        geometry.dispose();
+        glowGeo.dispose();
+        material.dispose();
+        glowMat.dispose();
+        _orbScene = null;
+      },
+    };
+  }
+
+  // Load Three.js from web_accessible_resources, then init orb
+  // Only inject once per page — check if already on window
+  function loadThreeAndInitOrb() {
+    if (window.THREE) {
+      initOrbScene();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = chrome.runtime.getURL("libs/three.min.js");
+    script.onload = () => {
+      initOrbScene();
+    };
+    script.onerror = () => {
+      /* silently skip — CSS orb still shows */
+    };
+    (document.head || document.documentElement).appendChild(script);
+  }
+
+  // Small delay so the shadow DOM has painted before we grab the canvas
+  setTimeout(loadThreeAndInitOrb, 100);
+
   let widgetPoll = setInterval(pollWidget, 3000);
   pollWidget(); // immediate first render
-  
+
   // Set initial theme
   chrome.storage.local.get("userTheme", ({ userTheme }) => {
     if (userTheme === "light") host.setAttribute("data-theme", "light");
     else host.removeAttribute("data-theme");
   });
 
-  widgetRoot._stopPoll = () => clearInterval(widgetPoll);
+  widgetRoot._stopPoll = () => {
+    clearInterval(widgetPoll);
+    if (_orbScene) _orbScene.destroy();
+  };
 }
 
 function removeWidget() {
@@ -662,7 +860,8 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.userTheme) {
     const host = document.getElementById("__studyguard_widget__");
     if (host) {
-      if (changes.userTheme.newValue === "light") host.setAttribute("data-theme", "light");
+      if (changes.userTheme.newValue === "light")
+        host.setAttribute("data-theme", "light");
       else host.removeAttribute("data-theme");
     }
   }
